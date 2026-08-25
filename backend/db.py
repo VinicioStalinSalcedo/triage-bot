@@ -1,11 +1,11 @@
 """Acceso a PostgreSQL para los casos de triage.
 
-Responsabilidad deliberada: este módulo NO inserta casos nuevos. Esa inserción
-la hace el nodo Postgres de n8n directamente (ver PROMPTS.md, decisión Postgres
-vs SQLite: elegimos Postgres justamente para que n8n use su nodo nativo en vez
-de un hack de Execute Command). Flask (app.py) solo llama a init_db() al
-arrancar para garantizar que la tabla exista. El dashboard de Streamlit es
-quien lee la lista de pendientes y registra la firma del médico.
+Responsabilidad deliberada: este módulo NO inserta casos nuevos ni crea el
+schema. La inserción la hace el nodo Postgres de n8n (ver PROMPTS.md, decisión
+Postgres vs SQLite: elegimos Postgres justamente para que n8n use su nodo
+nativo en vez de un hack de Execute Command), y el schema se crea al levantar
+la base (db/init.sql). Lo que vive aquí es lo que consume el panel del médico:
+leer la cola de pendientes y registrar la firma.
 """
 import os
 
@@ -31,28 +31,6 @@ def get_connection():
     return psycopg2.connect(DATABASE_URL)
 
 
-def init_db() -> None:
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS triage_cases (
-                    id SERIAL PRIMARY KEY,
-                    symptoms_text TEXT NOT NULL,
-                    color_triage TEXT NOT NULL,
-                    diagnostico_presuntivo TEXT,
-                    explicacion_feynman TEXT,
-                    propuesta_ia TEXT,
-                    plan_final TEXT,
-                    justificacion_clinica_rag TEXT,
-                    contraindicaciones_alertas TEXT,
-                    estado TEXT NOT NULL DEFAULT 'Pendiente',
-                    attended_by TEXT,
-                    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-                    attended_at TIMESTAMPTZ
-                );
-            """)
-
-
 def get_pending_cases() -> list[dict]:
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
@@ -61,6 +39,21 @@ def get_pending_cases() -> list[dict]:
                 WHERE estado = 'Pendiente'
                 ORDER BY {_PRIORITY_ORDER}, created_at ASC;
             """)
+            return cur.fetchall()
+
+
+def get_attended_cases(limit: int = 20) -> list[dict]:
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT * FROM triage_cases
+                WHERE estado = 'Atendido'
+                ORDER BY attended_at DESC
+                LIMIT %s;
+                """,
+                (limit,),
+            )
             return cur.fetchall()
 
 

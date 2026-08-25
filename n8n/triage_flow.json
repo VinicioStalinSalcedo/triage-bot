@@ -1,0 +1,474 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "triage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "54257baa-93cc-43cf-b220-2b4d3947faad",
+      "name": "Webhook",
+      "webhookId": "7d9bad1e-415f-4c64-bf34-e346d6c953fe"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:5000/api/triage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fb88cbd5-e256-4dd8-a674-22ae6d900125",
+      "name": "Analisis IA"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "triage_cases",
+          "mode": "list",
+          "cachedResultName": "triage_cases"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "gestante": "={{ $('Webhook').item.json.body.gestante }}",
+            "symptoms_text": "={{ $('Webhook').item.json.body.symptoms }}",
+            "edad": "={{ $('Webhook').item.json.body.edad }}",
+            "sexo": "={{ $('Webhook').item.json.body.sexo }}",
+            "color_triage": "={{ $json.color_triage }}",
+            "diagnostico_presuntivo": "={{ $json.diagnostico_presuntivo }}",
+            "explicacion_feynman": "={{ $json.explicacion_feynman }}",
+            "propuesta_ia": "={{ $json.propuesta_receta_o_plan }}",
+            "justificacion_clinica_rag": "={{ $json.justificacion_clinica_rag }}",
+            "contraindicaciones_alertas": "={{ $json.contraindicaciones_alertas }}",
+            "fuentes_rag": "={{ JSON.stringify({ \"lista\": $json.fuentes_rag }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "symptoms_text",
+              "displayName": "symptoms_text",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "edad",
+              "displayName": "edad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sexo",
+              "displayName": "sexo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "gestante",
+              "displayName": "gestante",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "color_triage",
+              "displayName": "color_triage",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "diagnostico_presuntivo",
+              "displayName": "diagnostico_presuntivo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "explicacion_feynman",
+              "displayName": "explicacion_feynman",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "propuesta_ia",
+              "displayName": "propuesta_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "justificacion_clinica_rag",
+              "displayName": "justificacion_clinica_rag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "contraindicaciones_alertas",
+              "displayName": "contraindicaciones_alertas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fuentes_rag",
+              "displayName": "fuentes_rag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "plan_final",
+              "displayName": "plan_final",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attended_by",
+              "displayName": "attended_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attended_at",
+              "displayName": "attended_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "a97dc95c-d08c-4d36-b7a6-0def4fa89972",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "TY5kh2RtHCcLPDUV",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9cbe1a1a-a95b-4747-9819-6327320cb8e2",
+                    "leftValue": "={{ $('Analisis IA').item.json.color_triage }}",
+                    "rightValue": "Rojo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d7bdb791-98fb-4d4b-b612-e262b653c936",
+                    "leftValue": "={{ $('Analisis IA').item.json.color_triage }}",
+                    "rightValue": "Amarillo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4217ccac-3583-42e3-aa19-575ff0b7144d",
+                    "leftValue": "={{ $('Analisis IA').item.json.color_triage }}",
+                    "rightValue": "Verde",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        0
+      ],
+      "id": "cdc21af8-f5d6-46ec-aadc-0808070f0de9",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"estado\":\"recibido\",\"prioridad\":\"Rojo\",\"mensaje\":\"Acuda INMEDIATAMENTE al servicio de emergencias. Se notificó al médico de turno.\"}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        -112
+      ],
+      "id": "890b3ddb-17b7-4437-a64e-94d0df1c82e9",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"estado\":\"recibido\",\"prioridad\":\"Amarillo\",\"mensaje\":\"Permanezca en sala de espera. Será atendido con prioridad.\"}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        16
+      ],
+      "id": "80307e0f-d2c1-4435-98aa-b23cf7745ffe",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"estado\":\"recibido\",\"prioridad\":\"Verde\",\"mensaje\":\"Su caso quedó registrado. Agende una cita en el dispensario.\"}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        160
+      ],
+      "id": "5ad58641-4d07-4bb2-a02c-4dcc5135d6f0",
+      "name": "Respond to Webhook2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Analisis IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisis IA": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a0acade6-8991-4b55-96fd-a0901f90443a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9e9cd39ce1bbec9003d19699ad22fe0b21be96299ddfbb8c670ff9ff1dcc8344"
+  },
+  "nodeGroups": [],
+  "id": "l7jPszdm7tqVIIJB",
+  "tags": []
+}
