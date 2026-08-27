@@ -23,15 +23,30 @@ EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 # de relevancia interpretable y estable entre corpus de distinto tamaño.
 DISTANCE_METRIC = "cosine"
 
-# Fragmentos con distancia mayor a este umbral se descartan por irrelevantes.
-# Es preferible entregarle al LLM "no hay contexto" que contexto equivocado:
-# un fragmento de la guía de acné para un dolor abdominal contamina el
-# razonamiento clínico.
+# Umbral de descarte de fragmentos por distancia.
 #
-# Calibrado empíricamente sobre este corpus (6 guías, 3.664 fragmentos):
-#   0.32-0.49  recuperación correcta (preeclampsia 0.325, angina 0.424, acné 0.49)
-#   0.59-0.62  ruido (esguince de tobillo -> vesícula biliar, técnica de punción)
-#   0.74       fuera de dominio (control negativo "capital de Francia")
-# El umbral se sitúa en el hueco entre el peor acierto (0.4913) y el mejor
-# falso positivo (0.5892). Re-calibrar si cambia el corpus o el modelo.
-MAX_DISTANCE = 0.55
+# HISTORIA DE CALIBRACIÓN — el rol de este parámetro cambió al crecer el corpus.
+#
+# Con 6 guías (3.664 fragmentos) los grupos se separaban limpiamente y el umbral
+# funcionaba como detector de cobertura: 0.32-0.49 acierto, 0.59-0.62 ruido,
+# 0.74 fuera de dominio. Se fijó en 0.55, en el hueco entre ambos.
+#
+# Con 10 guías (5.933 fragmentos) esa separación desaparece. Medición sobre los
+# 28 casos de eval/cases.json (evaluate.py --recuperacion):
+#   Casos con respaldo esperado : 0.3107 - 0.5168
+#   Casos sin respaldo esperado : 0.3533 - 0.7817
+# Los rangos se solapan: ningún umbral los separa. La causa es la densificación
+# del corpus — un resfriado queda a 0.44 de la guía de neumonía y una ansiedad
+# situacional a 0.36 de la de depresión. Proximidad ya no implica pertinencia.
+#
+# DECISIÓN: el umbral deja de ser filtro de relevancia clínica y pasa a ser
+# filtro de dominio. Se fija en 0.65, que descarta lo manifiestamente ajeno
+# (control negativo no clínico: 0.7817) y admite todo lo clínicamente plausible.
+# El juicio fino de pertinencia se delega al LLM, que sí dispone del cuadro
+# completo para decidir — y que demostró hacerlo: ante contexto de
+# envenenamientos para una preeclampsia, lo descartó y lo declaró (ver
+# PROMPTS.md, incidente del 2026-08-25).
+#
+# Defensa en dos capas: umbral para lo grosero, inferencia para lo sutil.
+# Recalibrar ante cualquier cambio de corpus o de modelo de embeddings.
+MAX_DISTANCE = 0.65

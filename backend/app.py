@@ -145,7 +145,12 @@ def triage():
     try:
         completion = client.chat.completions.create(
             model=MODEL,
-            temperature=0.2,
+            # Temperatura 0: en una clasificación de seguridad clínica la
+            # reproducibilidad pesa más que la variedad de la redacción. Con 0.2
+            # el mismo caso de urgencia hipertensiva se clasificó Verde en una
+            # ejecución y Amarillo en otra — varianza inaceptable en la frontera
+            # entre niveles (ver PROMPTS.md, evaluación del 2026-08-25).
+            temperature=0,
             response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},

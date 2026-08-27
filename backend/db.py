@@ -64,6 +64,46 @@ def get_case(case_id: int) -> dict | None:
             return cur.fetchone()
 
 
+def get_estadisticas() -> dict:
+    """Indicadores agregados para el panel de gestión.
+
+    Incluye deliberadamente la proporción de casos resueltos sin respaldo
+    documental: es la medida honesta de la cobertura real del corpus.
+    """
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT
+                    count(*)                                              AS total,
+                    count(*) FILTER (WHERE estado = 'Pendiente')          AS pendientes,
+                    count(*) FILTER (WHERE estado = 'Atendido')           AS atendidos,
+                    count(*) FILTER (WHERE color_triage = 'Rojo')         AS rojos,
+                    count(*) FILTER (WHERE color_triage = 'Amarillo')     AS amarillos,
+                    count(*) FILTER (WHERE color_triage = 'Verde')        AS verdes,
+                    count(*) FILTER (
+                        WHERE fuentes_rag IS NULL
+                           OR jsonb_array_length(COALESCE(fuentes_rag->'lista', '[]'::jsonb)) = 0
+                    )                                                     AS sin_respaldo,
+                    EXTRACT(EPOCH FROM avg(attended_at - created_at))/60  AS minutos_promedio
+                FROM triage_cases;
+            """)
+            return cur.fetchone()
+
+
+def get_uso_de_guias() -> list[dict]:
+    """Cuántas veces sustentó cada guía del MSP un triaje."""
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT fuente->>'guia' AS guia, count(*) AS usos
+                FROM triage_cases,
+                     jsonb_array_elements(COALESCE(fuentes_rag->'lista', '[]'::jsonb)) AS fuente
+                GROUP BY 1
+                ORDER BY usos DESC;
+            """)
+            return cur.fetchall()
+
+
 def sign_case(case_id: int, plan_final: str, attended_by: str) -> None:
     with get_connection() as conn:
         with conn.cursor() as cur:

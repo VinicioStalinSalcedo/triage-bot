@@ -1,0 +1,14 @@
+# Tema fijado explícitamente: la interfaz usa un sistema de color propio con
+# los códigos de triaje, y el tema oscuro automático de Streamlit alteraba los
+# contrastes de las tarjetas. En un entorno clínico la lectura del color debe
+# ser inequívoca.
+[theme]
+base = "light"
+primaryColor = "#0F766E"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F1F5F9"
+textColor = "#0F172A"
+font = "sans serif"
+
+[server]
+runOnSave = true
