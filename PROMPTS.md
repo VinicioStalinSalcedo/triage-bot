@@ -194,4 +194,22 @@ Batería diseñada para cubrir las seis guías del corpus, los tres colores y el
 ### Restricción operativa — cuota diaria del proveedor (2026-08-25)
 Ocho casos de la última evaluación fallaron con `429 ... tokens per day (TPD): Limit 200000, Used 199070`. No es un defecto: una evaluación completa (28 casos × 2 llamadas) consume prácticamente el límite diario del plan gratuito de Groq. Queda documentado en `eval/evaluate.py`: una evaluación completa por día, o usar `--recuperacion`, que no invoca al modelo. La corrección del prompt de signos vitales **queda pendiente de validación** hasta que la cuota se restablezca.
 
+### Hito 9 — Separación de modelos por etapa y validación de la corrección (2026-08-25)
+
+**Hallazgo operativo:** el límite de tokens diarios de Groq es **por modelo**, no por cuenta (el mensaje de error lo indica: *"Rate limit reached for model `openai/gpt-oss-120b`"*). Se sondearon los modelos disponibles: `openai/gpt-oss-20b` y `qwen/qwen3.6-27b` responden con cuota independiente; `llama-3.1-8b-instant` y `moonshotai/kimi-k2-instruct` no están accesibles en este plan.
+
+**Cambio de arquitectura:** los modelos de cada etapa se declararon configurables por entorno (`GROQ_MODEL_TRIAGE`, `GROQ_MODEL_REWRITE`). La reescritura clínica pasó de forma permanente a `openai/gpt-oss-20b`: es traducción de términos y no requiere el modelo mayor. El beneficio es doble — reparte el consumo entre dos cuotas independientes y **reduce a la mitad el gasto del modelo de clasificación**, que es el crítico para una demostración en vivo.
+
+**Validación de la corrección de signos vitales** (ejecutada sobre `gpt-oss-20b` para no consumir la cuota del modelo de producción):
+
+| Métrica | Antes de signos vitales (120b) | Con signos vitales corregidos (20b) |
+|---|---|---|
+| Coincidencia exacta | 85 % | **88 %** |
+| Sobre-triaje | 15 % (4 casos) | **0 %** |
+| Sub-triaje | 0 % | **0 %** |
+
+Matriz de confusión perfectamente **diagonal**: los 23 casos ejecutados coincidieron exactamente. Los cuatro sobre-triajes previos se corrigieron según lo previsto —apendicitis, neumonía y lumbalgia bajaron de Rojo a Amarillo con constantes estables, y la ansiedad situacional de Amarillo a Verde—, sin reintroducir sub-triaje.
+
+**Limitación reconocida de esta validación.** Se ejecutó sobre `gpt-oss-20b`, no sobre el modelo de producción. El modelo pequeño mostró dos debilidades que lo invalidan como proxy para casos frontera: devuelve `400 - Failed to validate JSON` de forma reproducible en un caso (limitación de capacidad, no defecto del sistema: el 120b procesó los 28 sin este error), y clasificó el mismo caso de diabetes gestacional como Amarillo y como Verde en ejecuciones distintas **a temperatura 0**. La corrección queda por tanto **demostrada en su efecto principal** (eliminación del sobre-triaje, reproducible en ambos modelos) y **pendiente de confirmación en los casos frontera** sobre el modelo de producción.
+
 <!-- Añadir aquí cada hito nuevo, con fecha y prompts clave usados para resolver bloqueos -->

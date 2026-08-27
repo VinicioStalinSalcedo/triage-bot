@@ -147,7 +147,7 @@ def evaluar_completo(casos: list[dict], url: str, pausa: float) -> None:
 
         if respuesta.status_code != 200:
             print(f"{caso['id']:<6} {str(caso['color_esperado'] or '—'):<10} {'HTTP ' + str(respuesta.status_code):<10} "
-                  f"{'—':>8}  {str(datos.get('error'))[:40]}")
+                  f"{'—':>8}  {str(datos.get('error'))[:160]}")
             errores += 1
             continue
 
@@ -198,9 +198,17 @@ def main() -> None:
     parser.add_argument("--url", default=API_URL, help=f"Endpoint de triaje (por defecto {API_URL}).")
     parser.add_argument("--pausa", type=float, default=2.0,
                         help="Segundos entre casos, para no exceder el límite de peticiones (por defecto 2).")
+    parser.add_argument("--casos", default=None,
+                        help="Lista de ids separados por coma (ej. A-02,A-06,A-08). Permite validar un "
+                             "cambio concreto sin consumir la cuota diaria completa.")
     args = parser.parse_args()
 
     casos = cargar_casos()
+    if args.casos:
+        seleccion = {c.strip().upper() for c in args.casos.split(",")}
+        casos = [c for c in casos if c["id"].upper() in seleccion]
+        if not casos:
+            raise SystemExit(f"Ningún caso coincide con {sorted(seleccion)}")
     print(f"Conjunto de evaluación: {len(casos)} casos\n")
 
     if args.recuperacion:

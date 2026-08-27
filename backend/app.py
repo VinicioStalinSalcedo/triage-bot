@@ -28,7 +28,13 @@ from rag.query_rag import query_symptoms
 
 load_dotenv()
 
-MODEL = "openai/gpt-oss-120b"
+# Los modelos son configurables por entorno, y las dos etapas se declaran por
+# separado a propósito: el límite de tokens diarios de Groq es POR MODELO, así
+# que repartir las etapas entre dos modelos duplica la cuota disponible, y
+# permite validar con un modelo alterno sin consumir la del que se usará en
+# producción o en una demostración.
+MODEL = os.getenv("GROQ_MODEL_TRIAGE", "openai/gpt-oss-120b")
+MODEL_REWRITE = os.getenv("GROQ_MODEL_REWRITE", MODEL)
 VALID_COLORS = ("Rojo", "Amarillo", "Verde")
 TOP_K = 4
 
@@ -113,7 +119,7 @@ def _to_clinical_query(symptoms_text: str, patient: dict) -> str:
     """
     try:
         completion = client.chat.completions.create(
-            model=MODEL,
+            model=MODEL_REWRITE,
             temperature=0.0,
             # Sin tope de tokens: gpt-oss-120b es un modelo de razonamiento y
             # consume presupuesto pensando antes de emitir contenido. Con un
