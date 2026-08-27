@@ -128,6 +128,17 @@ def vista_recepcion() -> None:
             edad = c1.number_input("Edad", min_value=0, max_value=120, value=25)
             sexo = c2.selectbox("Sexo", ["", "femenino", "masculino"])
             gestante = c3.selectbox("¿Embarazada?", ["No aplica", "Sí", "No"])
+
+            st.markdown("**Signos vitales** · opcionales, los toma el personal de recepción")
+            v1, v2, v3 = st.columns(3)
+            sistolica = v1.number_input("PA sistólica (mmHg)", 0, 300, 0, help="0 = no tomada")
+            diastolica = v2.number_input("PA diastólica (mmHg)", 0, 200, 0, help="0 = no tomada")
+            frec_card = v3.number_input("Frec. cardíaca (lpm)", 0, 300, 0, help="0 = no tomada")
+            v4, v5, v6 = st.columns(3)
+            frec_resp = v4.number_input("Frec. respiratoria (rpm)", 0, 90, 0, help="0 = no tomada")
+            temperatura = v5.number_input("Temperatura (°C)", 0.0, 45.0, 0.0, step=0.1, help="0 = no tomada")
+            saturacion = v6.number_input("Saturación O₂ (%)", 0, 100, 0, help="0 = no tomada")
+
             enviar = st.form_submit_button("Enviar consulta", type="primary", use_container_width=True)
 
     with derecha:
@@ -156,6 +167,16 @@ def vista_recepcion() -> None:
     carga = {"symptoms": sintomas.strip(), "edad": int(edad), "sexo": sexo or None}
     if gestante != "No aplica":
         carga["gestante"] = gestante == "Sí"
+
+    # Cero significa "no tomado": se omite del envío en lugar de mandarse como
+    # medición, para que el modelo distinga ausencia de dato de valor anómalo.
+    for campo, valor in [
+        ("pa_sistolica", sistolica), ("pa_diastolica", diastolica),
+        ("frecuencia_cardiaca", frec_card), ("frecuencia_respiratoria", frec_resp),
+        ("temperatura", temperatura), ("saturacion_oxigeno", saturacion),
+    ]:
+        if valor:
+            carga[campo] = valor
 
     with st.spinner("Analizando su consulta contra las guías clínicas..."):
         try:
@@ -197,6 +218,26 @@ def _ficha(caso: dict) -> None:
     """, unsafe_allow_html=True)
 
     st.markdown(f'<div class="relato">“{caso["symptoms_text"]}”</div>', unsafe_allow_html=True)
+    st.write("")
+
+    constantes = [
+        (f"{caso['pa_sistolica']}/{caso['pa_diastolica']}", "PA (mmHg)")
+        if caso.get("pa_sistolica") and caso.get("pa_diastolica") else None,
+        (caso.get("frecuencia_cardiaca"), "FC (lpm)"),
+        (caso.get("frecuencia_respiratoria"), "FR (rpm)"),
+        (caso.get("temperatura"), "Temp (°C)"),
+        (caso.get("saturacion_oxigeno"), "SatO₂ (%)"),
+    ]
+    constantes = [c for c in constantes if c and c[0]]
+    if constantes:
+        for columna, (valor, titulo) in zip(st.columns(len(constantes)), constantes):
+            columna.markdown(
+                f'<div class="kpi"><div class="n" style="font-size:1.4rem">{valor}</div>'
+                f'<div class="t">{titulo}</div></div>',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.caption("Sin signos vitales registrados — la valoración se apoyó solo en el relato.")
     st.write("")
 
     col1, col2 = st.columns(2, gap="medium")

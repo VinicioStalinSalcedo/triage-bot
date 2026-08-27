@@ -12,6 +12,12 @@ Dos modos:
 El modo de recuperación es el que se usa para calibrar MAX_DISTANCE: reporta la
 distribución de distancias separando los casos con respaldo documental esperado
 de los que no lo tienen, y propone un umbral en el intervalo que los separa.
+
+CONSUMO DE CUOTA: el modo completo son 28 casos x 2 llamadas al proveedor, que
+en el plan gratuito de Groq consumen prácticamente el límite diario de 200.000
+tokens. Una segunda ejecución el mismo día falla con error 429 en los últimos
+casos. Planifique una evaluación completa por día, o use --recuperacion, que no
+invoca al modelo y por tanto no consume cuota.
 """
 import argparse
 import json
@@ -129,6 +135,7 @@ def evaluar_completo(casos: list[dict], url: str, pausa: float) -> None:
         payload = {"symptoms": caso["sintomas"], "edad": caso["edad"], "sexo": caso["sexo"]}
         if caso["gestante"] is not None:
             payload["gestante"] = caso["gestante"]
+        payload.update(caso.get("vitales") or {})
 
         try:
             respuesta = requests.post(url, json=payload, timeout=180)

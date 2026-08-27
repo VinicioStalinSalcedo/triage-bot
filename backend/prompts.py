@@ -66,6 +66,22 @@ de vida inminente.
 - Ante ambigüedad o información insuficiente, prefiere el color más grave: el costo de \
 subestimar una emergencia es mucho mayor que el de sobreestimar un caso leve.
 
+Uso de los signos vitales, cuando se aporten:
+- Contrástalos con los criterios de las guías recuperadas, no con umbrales memorizados.
+- Una constante alterada pesa más que la impresión subjetiva de bienestar del paciente: \
+alguien que dice encontrarse bien puede tener cifras que exijan atención inmediata.
+- Unas constantes normales descartan INESTABILIDAD HEMODINÁMICA, y únicamente eso. NO \
+reducen la gravedad de cuadros cuya severidad no se expresa en signos vitales: los \
+trastornos metabólicos y endocrinos, los cuadros psiquiátricos, los déficits neurológicos \
+focales y las infecciones localizadas pueden exigir atención urgente con constantes \
+enteramente normales. Nunca degrades el nivel de urgencia solo porque los signos vitales \
+estén en rango.
+- El aporte de unas constantes normales es evitar el escalamiento al nivel máximo por pura \
+incertidumbre, no rebajar el nivel que el cuadro clínico justifica por sí mismo.
+- Si no se tomaron signos vitales, la incertidumbre es mayor y aplica la regla de \
+escalamiento anterior.
+- Menciona en tu justificación qué constantes sustentaron la decisión.
+
 Contenido de la respuesta:
 - Si el color es "Verde", "propuesta_receta_o_plan" debe ser un borrador de receta simple \
 con dosificación. Si es "Amarillo" o "Rojo", debe ser un Plan de Estabilización Inmediata \
@@ -91,11 +107,41 @@ def format_patient_context(patient: dict) -> str:
     return "\n".join(campos) if campos else "(No se proporcionaron datos demográficos.)"
 
 
+def format_vitals(vitals: dict) -> str:
+    """Formatea los signos vitales tomados en recepción.
+
+    No se interpretan aquí: se presentan como mediciones y es el modelo quien
+    las contrasta con los criterios de las guías recuperadas. Cualquier umbral
+    codificado en este módulo convertiría la clasificación en una regla fija.
+    """
+    sistolica, diastolica = vitals.get("pa_sistolica"), vitals.get("pa_diastolica")
+    lineas = []
+    if sistolica and diastolica:
+        lineas.append(f"Presión arterial: {sistolica}/{diastolica} mmHg")
+    if vitals.get("frecuencia_cardiaca"):
+        lineas.append(f"Frecuencia cardíaca: {vitals['frecuencia_cardiaca']} lpm")
+    if vitals.get("frecuencia_respiratoria"):
+        lineas.append(f"Frecuencia respiratoria: {vitals['frecuencia_respiratoria']} rpm")
+    if vitals.get("temperatura"):
+        lineas.append(f"Temperatura: {vitals['temperatura']} °C")
+    if vitals.get("saturacion_oxigeno"):
+        lineas.append(f"Saturación de oxígeno: {vitals['saturacion_oxigeno']} %")
+
+    if not lineas:
+        return "(No se tomaron signos vitales. Considere esta ausencia al valorar la incertidumbre.)"
+    return "\n".join(lineas)
+
+
 def build_rewrite_prompt(symptoms_text: str, patient: dict) -> str:
     return f'{format_patient_context(patient)}\n"{symptoms_text}"'
 
 
-def build_user_prompt(symptoms_text: str, rag_context: list[dict], patient: dict | None = None) -> str:
+def build_user_prompt(
+    symptoms_text: str,
+    rag_context: list[dict],
+    patient: dict | None = None,
+    vitals: dict | None = None,
+) -> str:
     if rag_context:
         contexto = "\n\n".join(
             f"[Fuente: {c['guia']}, pág. {c['pagina']}]\n{c['contenido']}"
@@ -109,6 +155,9 @@ def build_user_prompt(symptoms_text: str, rag_context: list[dict], patient: dict
 
     return f"""Datos del paciente:
 {format_patient_context(patient or {})}
+
+Signos vitales tomados en recepción:
+{format_vitals(vitals or {})}
 
 Síntomas reportados en sus propias palabras:
 \"\"\"{symptoms_text}\"\"\"

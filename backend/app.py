@@ -75,6 +75,36 @@ def _parse_patient(body: dict) -> dict:
     return {"edad": edad, "sexo": sexo, "gestante": gestante}
 
 
+# Signos vitales admitidos y su tipo. La validación es de formato, no clínica:
+# aquí no se decide si una cifra es normal o alarmante — eso lo infiere el
+# modelo contra las guías. Un umbral codificado en este punto convertiría la
+# clasificación de gravedad en una regla fija.
+_SIGNOS_VITALES = {
+    "pa_sistolica": int,
+    "pa_diastolica": int,
+    "frecuencia_cardiaca": int,
+    "frecuencia_respiratoria": int,
+    "temperatura": float,
+    "saturacion_oxigeno": int,
+}
+
+
+def _parse_vitals(body: dict) -> dict:
+    """Extrae los signos vitales presentes, descartando valores no numéricos."""
+    vitales: dict = {}
+    for campo, tipo in _SIGNOS_VITALES.items():
+        valor = body.get(campo)
+        if valor in (None, ""):
+            vitales[campo] = None
+            continue
+        try:
+            vitales[campo] = tipo(valor)
+        except (TypeError, ValueError):
+            app.logger.warning("Signo vital ignorado por no ser numérico: %s=%r", campo, valor)
+            vitales[campo] = None
+    return vitales
+
+
 def _to_clinical_query(symptoms_text: str, patient: dict) -> str:
     """Traduce el relato del paciente a términos clínicos de guía.
 
@@ -139,6 +169,7 @@ def triage():
         return jsonify({"error": "El campo 'symptoms' es requerido."}), 400
 
     patient = _parse_patient(body)
+    vitals = _parse_vitals(body)
     clinical_query = _to_clinical_query(symptoms_text, patient)
     rag_context = _retrieve(symptoms_text, clinical_query)
 
@@ -154,7 +185,7 @@ def triage():
             response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": build_user_prompt(symptoms_text, rag_context, patient)},
+                {"role": "user", "content": build_user_prompt(symptoms_text, rag_context, patient, vitals)},
             ],
         )
     except Exception as exc:  # noqa: BLE001 - la causa se reporta tal cual al cliente

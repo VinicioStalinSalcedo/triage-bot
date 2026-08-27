@@ -177,4 +177,21 @@ Batería diseñada para cubrir las seis guías del corpus, los tres colores y el
 
 **Resultado final:** exactitud 85 % (22/26), sobre-triaje 15 %, **sub-triaje 0 %**, seguridad clínica 100 %. Matriz de confusión triangular superior: ningún caso cae por debajo de su gravedad de referencia. El intercambio respecto de temperatura 0,2 (88 % exacto pero 4 % de sub-triaje) es el correcto para el dominio.
 
+### Hito 8 — Signos vitales, y la regresión que provocaron (2026-08-25)
+
+**Motivación.** Los cuatro sobre-triajes de la evaluación anterior compartían causa: el modelo escalaba por falta de información objetiva. Se añadieron signos vitales opcionales (presión arterial, frecuencias cardíaca y respiratoria, temperatura, saturación) en el esquema, el endpoint, el prompt y la recepción, más una migración (`db/migrations/001_signos_vitales.sql`) para bases ya creadas.
+
+**Restricción de diseño respetada:** los signos vitales entran como **dato al prompt**, nunca como condicional en código. Un `if sistolica > 180: return "Rojo"` habría sido exactamente el if/else rígido que la rúbrica prohíbe y habría invalidado el argumento central del informe. La validación en `_parse_vitals` es de formato (numérico o se descarta), no clínica.
+
+**Regresión detectada.** La evaluación con constantes empeoró el resultado: aparecieron **tres sub-triajes nuevos** —diabetes gestacional, debut diabético y episodio depresivo moderado, los tres clasificados Verde— donde antes eran correctos.
+
+**Causa raíz: una instrucción propia mal acotada.** Se había escrito *"unas constantes normales reducen la incertidumbre y NO obligan a escalar"*, y el modelo la generalizó a "constantes normales ⇒ cuadro leve". El error de razonamiento es real: una depresión con deterioro funcional, un debut diabético o una diabetes gestacional tienen presión y pulso normales, y siguen requiriendo valoración pronta. Su gravedad no se expresa en constantes vitales.
+
+**Corrección.** Se acotó el alcance de la inferencia: unas constantes normales descartan *inestabilidad hemodinámica y únicamente eso*, y se enumeran explícitamente los dominios cuya severidad no se refleja en signos vitales (metabólico, endocrino, psiquiátrico, neurológico focal, infeccioso localizado). El aporte de unas constantes normales pasa a ser evitar el escalamiento por pura incertidumbre, nunca rebajar el nivel que el cuadro justifica por sí mismo.
+
+**Lección.** Añadir información al prompt no mejora el resultado por sí solo: hay que acotar qué inferencias autoriza esa información. Una instrucción correcta en su intención pero amplia en su formulación produjo un fallo de seguridad que la instrucción anterior no tenía.
+
+### Restricción operativa — cuota diaria del proveedor (2026-08-25)
+Ocho casos de la última evaluación fallaron con `429 ... tokens per day (TPD): Limit 200000, Used 199070`. No es un defecto: una evaluación completa (28 casos × 2 llamadas) consume prácticamente el límite diario del plan gratuito de Groq. Queda documentado en `eval/evaluate.py`: una evaluación completa por día, o usar `--recuperacion`, que no invoca al modelo. La corrección del prompt de signos vitales **queda pendiente de validación** hasta que la cuota se restablezca.
+
 <!-- Añadir aquí cada hito nuevo, con fecha y prompts clave usados para resolver bloqueos -->
