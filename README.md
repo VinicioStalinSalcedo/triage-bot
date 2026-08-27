@@ -53,8 +53,7 @@ receta borrador.
 
 ## 2. Qué hace el sistema
 
-1. El paciente describe lo que siente en sus propias palabras y, opcionalmente, aporta
-   edad, sexo y estado gestacional.
+1. El paciente describe lo que siente en sus propias palabras y, opcionalmente, aporta edad, sexo, estado gestacional y los signos vitales tomados en recepción.
 2. El relato se traduce a terminología clínica y se buscan por similitud semántica los
    fragmentos pertinentes de las guías del MSP.
 3. Un LLM clasifica la urgencia en **Rojo / Amarillo / Verde**, emite un diagnóstico
@@ -99,8 +98,9 @@ El detalle completo, con el flujo de datos campo por campo, está en
 |---|---|---|
 | Orquestación | n8n 2.35 | Webhook, llamada al backend, persistencia, enrutamiento |
 | Inferencia | Groq · `openai/gpt-oss-120b` | Clasificación y generación con JSON mode |
+| Reescritura clínica | Groq · `openai/gpt-oss-20b` | Traducción del relato a terminología de guía |
 | Embeddings | `paraphrase-multilingual-MiniLM-L12-v2` | Vectorización local del corpus y las consultas |
-| Base vectorial | ChromaDB (coseno) | Recuperación semántica sobre 3.664 fragmentos |
+| Base vectorial | ChromaDB (coseno) | Recuperación semántica sobre 5.933 fragmentos |
 | Backend | Flask | API de inferencia, sin estado |
 | Base de datos | PostgreSQL 16 | Historial y estados de atención |
 | Interfaz | Streamlit | Vista del paciente y panel del médico |
@@ -110,17 +110,21 @@ El detalle completo, con el flujo de datos campo por campo, está en
 
 ## 4. Corpus documental
 
-Seis Guías de Práctica Clínica oficiales del MSP del Ecuador, descargadas de
-`salud.gob.ec` y `aplicaciones.msp.gob.ec`:
+Diez Guías de Práctica Clínica oficiales del MSP del Ecuador, descargadas de `salud.gob.ec` y `aplicaciones.msp.gob.ec`:
 
 | Guía | Fragmentos |
-|---|---|
+|---|---:|
 | Protocolos de Atención Prehospitalaria para Emergencias Médicas | 1.257 |
+| Depresión / Episodio Depresivo en Adultos | 884 |
+| Diabetes Mellitus (2017) | 640 |
 | Trastornos Hipertensivos del Embarazo | 624 |
 | Recién Nacido con Dificultad para Respirar | 586 |
 | Hipertensión Arterial (2019) | 473 |
+| Dolor Lumbar | 427 |
 | Diagnóstico y Tratamiento del Acné | 420 |
+| Neumonía Adquirida en la Comunidad (2017) | 318 |
 | Diabetes en el Embarazo | 304 |
+| **Total** | **5.933** |
 
 ### Limitaciones conocidas del corpus
 
@@ -146,10 +150,9 @@ como si fuera un dictamen.
 quien persiste es el nodo Postgres de n8n. La orquestación y la persistencia viven en la
 capa de orquestación, no dentro del modelo.
 
-**Ante la duda, se escala.** El prompt instruye preferir el color más grave cuando la
-información es insuficiente. Esto produce sobre-triaje deliberado —una sospecha de
-apendicitis sin signos vitales se clasifica Rojo— y se acepta por la asimetría de costos
-descrita en §1.
+**Ante la duda, se escala.** El prompt instruye preferir el color más grave cuando la información es insuficiente. Sin signos vitales, una sospecha de apendicitis se clasifica Rojo; con constantes estables baja a Amarillo. El sobre-triaje residual se acepta por la asimetría de costos descrita en §1.
+
+**Los signos vitales no se evalúan en código.** Llegan al prompt como mediciones y es el modelo quien las contrasta con los criterios de las guías. Un umbral en Python sería exactamente la lógica condicional que este proyecto descarta. Además, unas constantes normales solo descartan inestabilidad hemodinámica: no rebajan la gravedad de cuadros metabólicos, psiquiátricos o neurológicos, cuya severidad no se expresa en signos vitales.
 
 **Recuperación en dos etapas.** El relato del paciente se traduce a terminología clínica
 antes de buscar, y se consulta con ambas versiones. Sin este paso, *"se me hinchó la cara

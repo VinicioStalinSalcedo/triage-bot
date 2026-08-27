@@ -29,10 +29,10 @@ flowchart TD
         L --> VAL["4· Validación de esquema"]
     end
 
-    Q -.->|"llamada 1"| G["☁️ Groq API<br/>openai/gpt-oss-120b"]
-    L -.->|"llamada 2"| G
+    Q -.->|"llamada 1"| G2["☁️ Groq API<br/>openai/gpt-oss-20b"]
+    L -.->|"llamada 2"| G["☁️ Groq API<br/>openai/gpt-oss-120b"]
     V <-->|"embeddings locales"| E["🧠 MiniLM multilingüe<br/>(en proceso)"]
-    V <-->|"similitud coseno"| C[("ChromaDB<br/>3.664 fragmentos")]
+    V <-->|"similitud coseno"| C[("ChromaDB<br/>5.933 fragmentos")]
 
     PG --> DB[("PostgreSQL<br/>triage_cases")]
     R1 & R2 & R3 -->|"solo enrutamiento"| P
@@ -41,6 +41,7 @@ flowchart TD
     M -->|"edita y firma"| DB
 
     style G fill:#f96,color:#000
+    style G2 fill:#fc9,color:#000
     style C fill:#9cf,color:#000
     style DB fill:#9cf,color:#000
     style E fill:#cf9,color:#000
@@ -92,12 +93,14 @@ POST /webhook/triage
 {
   "symptoms": "Se me hincharon la cara y las manos de un día para otro,
                me duele muchísimo la cabeza y veo lucecitas",
-  "edad": 28, "sexo": "femenino", "gestante": true
+  "edad": 28, "sexo": "femenino", "gestante": true,
+  "pa_sistolica": 168, "pa_diastolica": 112, "frecuencia_cardiaca": 92
 }
 ```
 
-Los datos demográficos son opcionales; el triaje funciona sin ellos, pero mejoran la
-recuperación y la inferencia.
+Todos los campos salvo `symptoms` son opcionales; el triaje funciona sin ellos, pero reducen la incertidumbre que de otro modo fuerza el escalamiento conservador.
+
+Los signos vitales admitidos son presión arterial sistólica y diastólica, frecuencias cardíaca y respiratoria, temperatura y saturación de oxígeno. Llegan al modelo **como dato en el prompt, nunca como condición en el código**: `_parse_vitals` valida que un valor sea numérico y nada más. Decidir si una cifra es alarmante corresponde a la inferencia contrastada con las guías; un umbral codificado en Python convertiría la clasificación de gravedad en la regla fija que este proyecto descarta.
 
 ### Etapa 2 — Reescritura clínica (Groq, llamada 1)
 
@@ -131,7 +134,7 @@ que el lenguaje coloquial nunca recuperaría.
 | Métrica | Coseno | Rango acotado [0,2], umbral interpretable |
 | Fragmento | 500 car. / 100 de solapamiento | Ajustado a la ventana efectiva del modelo |
 | `k` | 4 por consulta | Contexto suficiente sin diluir el prompt |
-| `MAX_DISTANCE` | 0,55 | Calibrado empíricamente (ver `rag/config.py`) |
+| `MAX_DISTANCE` | 0,65 | Calibrado empíricamente; filtro de dominio, no de relevancia (ver `rag/config.py`) |
 
 Los fragmentos que superan el umbral se descartan. **Si ninguno lo supera, se entrega
 contexto vacío**, y tanto el prompt como el panel del médico lo declaran. Es preferible
@@ -224,6 +227,12 @@ triage_cases
 ├── edad                        INTEGER
 ├── sexo                        TEXT
 ├── gestante                    BOOLEAN
+├── pa_sistolica                INTEGER        -- signos vitales de recepción,
+├── pa_diastolica               INTEGER        -- todos opcionales y sin
+├── frecuencia_cardiaca         INTEGER        -- validación de rango: su
+├── frecuencia_respiratoria     INTEGER        -- interpretación clínica
+├── temperatura                 NUMERIC(4,1)   -- corresponde al modelo
+├── saturacion_oxigeno          INTEGER
 │
 ├── ── salida de la IA ──
 ├── color_triage                TEXT NOT NULL  CHECK (Rojo|Amarillo|Verde)

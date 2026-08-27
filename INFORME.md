@@ -1,4 +1,9 @@
+<div align="center">
+<br><br><br>
+
 # Sistema de Triaje Clínico Preliminar Asistido por Inteligencia Artificial
+
+<br>
 
 ### Clasificación de urgencia mediante RAG sobre Guías de Práctica Clínica del MSP del Ecuador, con validación médica obligatoria
 
@@ -13,6 +18,12 @@ Célula de Ciberseguridad CyberMinds
 
 **Fecha:** 25 de agosto de 2026
 
+<br><br><br>
+
+</div>
+
+<div class="page-break"></div>
+
 ## Índice
 
 1. [Resumen ejecutivo](#1-resumen-ejecutivo)
@@ -25,6 +36,8 @@ Célula de Ciberseguridad CyberMinds
 8. [Conclusiones y trabajo futuro](#8-conclusiones-y-trabajo-futuro)
 9. [Anexos](#9-anexos)
 
+<div class="page-break"></div>
+
 
 
 ## 1. Resumen ejecutivo
@@ -35,7 +48,9 @@ En este proyecto se ha puesto en marcha un sistema de triaje preliminar que perm
 
 La inferencia es la parte principal del sistema que hace los cálculos. Ninguna condición de código decide la gravedad. La clasificación aparece cuando se entiende el relato y se compara con la normativa clínica recuperada.
 
-El sistema se probó con una serie de once casos que cubren las seis guías del corpus, los tres niveles de urgencia y el camino sin respaldo documental. Diez de once coincidieron con la clasificación esperada. La única diferencia fue un sobretriaje intencional, resultado de una instrucción clara de escalar cuando falta información. También se le hizo una prueba de inyección de prompts (OWASP LLM01). El sistema la superó sin perder su función clínica.
+El sistema se evaluó de forma reproducible sobre un conjunto de veintiocho casos etiquetados que cubren las diez guías del corpus, los tres niveles de urgencia y el camino sin respaldo documental. El resultado más relevante no es la exactitud sino la ausencia total de sub-triaje: **ningún caso se clasificó por debajo de su gravedad de referencia**, que es la propiedad de seguridad que un sistema de triaje debe garantizar. También se le sometió a una prueba de inyección de prompts (OWASP LLM01), que superó sin perder su función clínica.
+
+<div class="page-break"></div>
 
 ## 2. Definición del problema
 
@@ -73,7 +88,7 @@ El sistema es un **apoyo a la decisión clínica**, no un diagnosticador autóno
 - El corpus normativo no cubre la totalidad de la consulta ambulatoria, y el sistema
 **declara explícitamente** cuándo carece de respaldo documental (§6.5).
 
-
+<div class="page-break"></div>
 
 ## 3. Solución propuesta
 
@@ -108,6 +123,8 @@ El sistema produce dos de los resultados contemplados en el enunciado del proyec
 **Toma de decisiones.** Clasificación y enrutamiento de pacientes mediante evaluación probabilística del cuadro clínico. La decisión no proviene de condicionales sobre valores umbral, sino de la inferencia del modelo sobre el relato y el contexto normativo.
 
 **Interacción de dominio específico.** Asistente conversacional restringido al triaje clínico, anclado en normativa oficial y con negativa explícita a operar fuera de su rol —comportamiento verificado en la prueba de inyección de prompts (§6.4).
+
+<div class="page-break"></div>
 
 ## 4. Arquitectura de implementación
 
@@ -148,7 +165,7 @@ El sistema produce dos de los resultados contemplados en el enunciado del proyec
        ▼               ▼              │ revisa · edita   │
 ┌─────────────┐  ┌──────────────┐     │ firma            │
 │  ChromaDB   │  │  Groq API    │     └──────────────────┘
-│  3.664 frag.│  │ gpt-oss-120b │
+│  5.933 frag.│  │ gpt-oss-120b │
 │  (local)    │  │  (externo)   │
 └─────────────┘  └──────────────┘
 ```
@@ -174,13 +191,15 @@ Los embeddings se calculan **localmente**; el corpus documental nunca sale de la
 
 La tabla `triage_cases` separa tres bloques: la entrada del paciente, la salida de la IA y la decisión del médico. `propuesta_ia` y `plan_final` coexisten deliberadamente, de modo que **queda registro de qué propuso el modelo y qué decidió la persona**. Restricciones `CHECK` sobre `color_triage` y `estado` operan como defensa en profundidad, dado que la escritura ocurre fuera del código de la aplicación.
 
+<div class="page-break"></div>
+
 ## 5. Implementación técnica
 
 
 
 ### 5.1 Motor de recuperación
 
-Seis Guías de Práctica Clínica oficiales del MSP se fragmentan en unidades de 500 caracteres con 100 de solapamiento —dimensión ajustada a la ventana efectiva del modelo de embeddings— conservando guía y página de origen en los metadatos, lo que permite al modelo citar la procedencia de cada afirmación.
+Diez Guías de Práctica Clínica oficiales del MSP se fragmentan en unidades de 500 caracteres con 100 de solapamiento —dimensión ajustada a la ventana efectiva del modelo de embeddings— conservando guía y página de origen en los metadatos, lo que permite al modelo citar la procedencia de cada afirmación.
 
 La vectorización emplea `paraphrase-multilingual-MiniLM-L12-v2`, seleccionado tras verificar que un modelo mayormente anglófono producía coincidencias léxicas en lugar de semánticas sobre texto clínico en español. El almacenamiento usa ChromaDB con **distancia coseno**, cuyo rango acotado permite fijar un umbral de relevancia interpretable.
 
@@ -218,6 +237,8 @@ El flujo de n8n encadena siete nodos: recepción por webhook, invocación del ba
 Que este enrutamiento sea determinista no contradice la exigencia de inferencia probabilística: la *clasificación* es inferencia del modelo; el Switch actúa sobre una decisión ya tomada. Lo prohibido sería que la condición determinara la gravedad.
 
 El panel del médico presenta la cola ordenada por gravedad y, dentro de cada color, por orden de llegada. El profesional accede al análisis completo con sus fuentes, edita la propuesta y firma; la firma registra autor, marca temporal y plan definitivo, retirando el caso de la cola.
+
+<div class="page-break"></div>
 
 ## 6. Validación y resultados
 
@@ -307,11 +328,13 @@ Este resultado motivó **descartar la implementación de un filtro de sanitizaci
 
 ### 6.5 Limitaciones conocidas
 
-**Cobertura del corpus.** El índice público de guías del MSP se concentra en salud materno-neonatal, enfermedades crónicas y emergencias prehospitalarias. No cubre buena parte de la consulta ambulatoria frecuente —trauma musculoesquelético menor, infecciones urinarias no gestacionales, patología respiratoria alta—. Dos de los once casos de prueba se diseñaron expresamente para ejercitar esta condición: en ambos el sistema recuperó contexto vacío, lo declaró en su justificación y el panel del médico mostró la advertencia correspondiente.
+**Cobertura del corpus.** El índice público de guías del MSP se concentra en salud materno-neonatal, enfermedades crónicas y emergencias prehospitalarias. No cubre buena parte de la consulta ambulatoria frecuente —trauma musculoesquelético menor, infecciones urinarias no gestacionales, patología respiratoria alta—. Ocho de los veintiocho casos de prueba se diseñaron expresamente para ejercitar esta condición. La ampliación del corpus a diez guías cubrió parte de esos huecos —infección respiratoria, salud mental, patología musculoesquelética y diabetes en adulto no gestante—, pero subsisten motivos frecuentes sin cobertura normativa, y en ellos el sistema declara la limitación en lugar de citar la fuente menos inadecuada.
 
 **Ausencia de signos vitales objetivos.** El triaje opera sobre relato subjetivo. La incorporación de mediciones —presión arterial, frecuencia cardíaca, saturación, temperatura— reduciría la incertidumbre que hoy fuerza el escalamiento conservador.
 
 **Servidor de desarrollo.** El backend emplea el servidor integrado de Flask, adecuado para prototipo pero no para producción, donde correspondería un servidor WSGI dedicado.
+
+<div class="page-break"></div>
 
 ## 7. Decisiones de diseño
 
@@ -327,8 +350,7 @@ Este resultado motivó **descartar la implementación de un filtro de sanitizaci
 | **Sin framework de orquestación de LLM** | El proyecto requiere cuatro operaciones puntuales; la abstracción aportaba un árbol de dependencias irresoluble. Cada operación queda visible en el código. |
 | **Contenedores para todo el entorno**    | Reproducibilidad y aislamiento respecto de la máquina de desarrollo.                                                                                        |
 
-
-
+<div class="page-break"></div>
 
 ## 8. Conclusiones y trabajo futuro
 
@@ -336,7 +358,7 @@ Este resultado motivó **descartar la implementación de un filtro de sanitizaci
 
 ### 8.1 Conclusiones
 
-El sistema cumple su objetivo: clasifica correctamente diez de once casos de prueba redactados en lenguaje coloquial, fundamenta sus dictámenes en normativa oficial citando guía y página, y mantiene la decisión clínica bajo control humano.
+El sistema cumple su objetivo: clasifica correctamente veintitrés de veintiséis casos clínicos redactados en lenguaje coloquial, sin producir un solo sub-triaje, fundamenta sus dictámenes en normativa oficial citando guía y página, y mantiene la decisión clínica bajo control humano.
 
 Tres resultados merecen destacarse por encima del funcionamiento nominal:
 
@@ -354,7 +376,7 @@ Tres resultados merecen destacarse por encima del funcionamiento nominal:
 - **Emisión de receta firmada** en documento verificable.
 - **Evaluación con profesionales clínicos** sobre casuística real anonimizada, único camino para validar la calidad del triaje más allá de casos de prueba diseñados.
 
-
+<div class="page-break"></div>
 
 ## 9. Anexos
 
@@ -363,15 +385,19 @@ Tres resultados merecen destacarse por encima del funcionamiento nominal:
 ### Anexo A — Corpus documental
 
 
-| Guía de Práctica Clínica (MSP Ecuador)                          | Fragmentos |
-| --------------------------------------------------------------- | ---------- |
-| Protocolos de Atención Prehospitalaria para Emergencias Médicas | 1.257      |
-| Trastornos Hipertensivos del Embarazo                           | 624        |
-| Recién Nacido con Dificultad para Respirar                      | 586        |
-| Hipertensión Arterial (2019)                                    | 473        |
-| Diagnóstico y Tratamiento del Acné                              | 420        |
-| Diabetes en el Embarazo                                         | 304        |
-| **Total**                                                       | **3.664**  |
+| Guía de Práctica Clínica (MSP Ecuador) | Fragmentos |
+| --- | ---: |
+| Protocolos de Atención Prehospitalaria para Emergencias Médicas | 1.257 |
+| Depresión / Episodio Depresivo en Adultos | 884 |
+| Diabetes Mellitus (2017) | 640 |
+| Trastornos Hipertensivos del Embarazo | 624 |
+| Recién Nacido con Dificultad para Respirar | 586 |
+| Hipertensión Arterial (2019) | 473 |
+| Dolor Lumbar | 427 |
+| Diagnóstico y Tratamiento del Acné | 420 |
+| Neumonía Adquirida en la Comunidad (2017) | 318 |
+| Diabetes en el Embarazo | 304 |
+| **Total** | **5.933** |
 
 
 Documentos obtenidos de los repositorios oficiales `salud.gob.ec` y

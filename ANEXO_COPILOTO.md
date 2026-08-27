@@ -26,7 +26,7 @@ Célula de Ciberseguridad CyberMinds
 
 </div>
 
-<div style="page-break-after: always;"></div>
+<div class="page-break"></div>
 
 ## 1. Alcance de este documento
 
@@ -35,8 +35,7 @@ el desarrollo. **No es una transcripción de conversación.** Recoge únicamente
 técnicos que exigieron decisión de ingeniería, redactados en registro profesional, y
 consigna de forma explícita qué propuso el modelo, qué se aceptó, qué se rechazó y por qué.
 
-El criterio de inclusión fue la sustancia técnica: se documentan ocho bloqueos que
-alteraron el diseño, no la totalidad de las consultas realizadas. Los incidentes menores
+El criterio de inclusión fue la sustancia técnica: se documentan diez bloqueos que alteraron el diseño, no la totalidad de las consultas realizadas. Los incidentes menores
 —errores de sintaxis, ajustes de formato, consultas de referencia— se omiten por carecer
 de valor de trazabilidad.
 
@@ -66,7 +65,7 @@ El copiloto operó bajo tres reglas fijadas al inicio:
 3. **Toda decisión no evidente se registró con su justificación**, no solo con su
    resultado. Este anexo y la bitácora `PROMPTS.md` son producto de esa regla.
 
-<div style="page-break-after: always;"></div>
+<div class="page-break"></div>
 
 ## 4. Bloqueos documentados
 
@@ -343,7 +342,47 @@ vacía, resulta demasiado breve o contiene marcas de rechazo, continuando la bú
 el texto original. La decisión de no implementar el filtro queda sustentada en evidencia
 experimental documentada, no en supuesto.
 
-<div style="page-break-after: always;"></div>
+<div class="page-break"></div>
+
+---
+
+### B-09 · Regresión introducida por los signos vitales
+
+**Situación.** La evaluación automatizada mostraba cuatro casos de sobre-triaje con una causa común: el modelo escalaba por falta de información objetiva. Se decidió incorporar signos vitales opcionales al ingreso.
+
+**Restricción impuesta desde el inicio.** Al plantear la funcionalidad establecí una condición innegociable: las constantes debían llegar al modelo como dato del prompt y nunca como condicional en el código. Un `if sistolica > 180: return "Rojo"` habría sido precisamente la lógica condicional rígida que el proyecto argumenta descartar, y habría invalidado el eje central del informe. La validación implementada comprueba únicamente que el valor sea numérico.
+
+**Resultado obtenido.** La evaluación con constantes **empeoró** el resultado: aparecieron tres sub-triajes inexistentes hasta entonces —diabetes gestacional, debut diabético y episodio depresivo moderado, los tres clasificados como Verde.
+
+**Contraste crítico.** El diagnóstico del asistente identificó como causa una instrucción del propio prompt que él mismo había redactado: *"unas constantes normales reducen la incertidumbre y NO obligan a escalar"*. El modelo la había generalizado a "constantes normales implica cuadro leve".
+
+Verifiqué el razonamiento antes de aceptarlo, y resulta clínicamente sólido: una depresión con deterioro funcional, un debut diabético o una diabetes gestacional cursan con presión arterial y frecuencia cardíaca enteramente normales, y siguen exigiendo valoración pronta. Su gravedad no se expresa en constantes vitales. La instrucción era correcta en intención pero excesivamente amplia en formulación.
+
+**Resolución.** Se acotó el alcance de la inferencia autorizada: unas constantes normales descartan *inestabilidad hemodinámica y únicamente eso*, enumerando de forma explícita los dominios cuya severidad no se refleja en signos vitales —metabólico, endocrino, psiquiátrico, neurológico focal e infeccioso localizado. El aporte de unas constantes normales pasa a ser evitar el escalamiento por pura incertidumbre, nunca rebajar el nivel que el cuadro justifica por sí mismo.
+
+Verificación posterior: los cuatro sobre-triajes se corrigieron según lo previsto —apendicitis, neumonía y lumbalgia descendieron de Rojo a Amarillo con constantes estables, y la ansiedad situacional de Amarillo a Verde— sin reintroducir sub-triaje.
+
+**Aprendizaje.** Aportar más información al modelo no mejora el resultado por sí solo: hay que delimitar qué inferencias autoriza esa información. Una instrucción bienintencionada pero amplia introdujo un fallo de seguridad que la versión anterior no presentaba.
+
+---
+
+### B-10 · Agotamiento de la cuota diaria del proveedor
+
+**Situación.** Ocho casos de una evaluación completa fallaron con error de servicio. La presentación del proyecto estaba prevista para el día siguiente, lo que convertía la disponibilidad de la cuota en un requisito de la demostración, no solo del desarrollo.
+
+**Observación propia.** Planteé la pregunta en términos operativos: si existía alguna plataforma alternativa para continuar las pruebas, o si convenía esperar al restablecimiento conservando la cuota íntegra para la presentación.
+
+**Diagnóstico.** El error indicaba `tokens per day (TPD): Limit 200000, Used 199070`. Una evaluación completa —28 casos por dos llamadas al modelo— consume prácticamente la asignación diaria completa del plan gratuito. No se trataba de un defecto del sistema.
+
+**Hallazgo determinante.** El mensaje de error especifica *"Rate limit reached **for model** `openai/gpt-oss-120b`"*: el límite se aplica por modelo, no por cuenta. Se sondearon empíricamente cinco modelos del proveedor: `gpt-oss-20b` y `qwen3.6-27b` respondían con cuota independiente; otros dos no estaban disponibles en el plan contratado.
+
+**Contraste crítico.** Descarté migrar a otra plataforma: habría implicado cambiar el cliente, revalidar el comportamiento del modelo en español y asumir riesgo la víspera de la presentación, a cambio de resolver un problema que la separación de modelos resolvía sin tocar la arquitectura.
+
+También verifiqué la validez del modelo alterno como sustituto de pruebas, y **la descarté para casos frontera**: `gpt-oss-20b` devolvía error de validación JSON de forma reproducible en un caso —limitación de capacidad del modelo pequeño, dado que el modelo mayor procesó los 28 casos sin incidencia— y clasificó un mismo caso de diabetes gestacional de forma distinta en ejecuciones sucesivas a temperatura cero. Sirve para verificar el efecto principal de un cambio, no para dictaminar sobre casos límite.
+
+**Resolución.** Los modelos de cada etapa se declararon configurables por entorno. La reescritura clínica se trasladó de forma permanente al modelo menor: es una traducción de terminología que no requiere el modelo mayor. El beneficio es doble —reparte el consumo entre dos cuotas independientes y reduce a la mitad el gasto del modelo de clasificación, que es el crítico para una demostración en vivo. Se añadió además un selector de casos al evaluador, para validar cambios concretos sin consumir la asignación completa.
+
+---
 
 ## 5. Defectos detectados por auditoría preventiva
 

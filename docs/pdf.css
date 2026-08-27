@@ -1,0 +1,122 @@
+/* Estilos de impresión para la exportación a PDF (extensión Markdown PDF, yzane).
+   Se referencia desde .vscode/settings.json → markdown-pdf.styles */
+
+body {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.6;
+  color: #1e293b;
+}
+
+/* Salto de página. Se usa como <div class="page-break"></div>.
+   Se conserva también la forma con estilo en línea por compatibilidad. */
+.page-break,
+div[style*="page-break-after"] {
+  page-break-after: always;
+  break-after: page;
+  height: 0;
+}
+
+h1 {
+  font-size: 20pt;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.3em;
+}
+h2 {
+  font-size: 15pt;
+  color: #0f172a;
+  border-bottom: 1.5px solid #cbd5e1;
+  padding-bottom: 0.25em;
+  margin-top: 1.6em;
+  page-break-after: avoid;
+}
+h3 {
+  font-size: 12pt;
+  color: #0f766e;
+  margin-top: 1.3em;
+  page-break-after: avoid;
+}
+h4 {
+  font-size: 10.5pt;
+  color: #334155;
+  page-break-after: avoid;
+}
+
+/* Una tabla partida entre páginas es ilegible en un informe. */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 9.5pt;
+  margin: 1em 0;
+  page-break-inside: avoid;
+}
+th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 600;
+  text-align: left;
+  border: 1px solid #cbd5e1;
+  padding: 6px 9px;
+}
+td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 9px;
+  vertical-align: top;
+}
+tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+/* Los diagramas ASCII deben caber sin que se parta ninguna línea. */
+pre {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 8pt;
+  line-height: 1.35;
+  page-break-inside: avoid;
+  white-space: pre;
+  overflow-x: hidden;
+}
+code {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 9pt;
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+blockquote {
+  border-left: 3px solid #0f766e;
+  background: #f0fdfa;
+  margin: 1em 0;
+  padding: 0.6em 1em;
+  color: #334155;
+}
+
+/* La portada usa <div align="center"> con saltos <br>. */
+div[align="center"] h1 {
+  font-size: 24pt;
+  margin-top: 0;
+}
+div[align="center"] h3 {
+  font-size: 12pt;
+  font-weight: 400;
+  color: #475569;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.6em 0;
+}
+strong {
+  color: #0f172a;
+}

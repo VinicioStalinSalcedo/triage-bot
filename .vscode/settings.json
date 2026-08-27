@@ -1,0 +1,30 @@
+{
+  // El formateador de Markdown elimina el HTML embebido (portada centrada y
+  // saltos de página), que la exportación a PDF necesita. Se desactiva el
+  // formateo automático solo para Markdown y solo en este proyecto.
+  "[markdown]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    "editor.defaultFormatter": null,
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+
+  // Exportación a PDF — extensión "Markdown PDF" (yzane).
+  "markdown-pdf.format": "A4",
+  "markdown-pdf.margin.top": "20mm",
+  "markdown-pdf.margin.bottom": "20mm",
+  "markdown-pdf.margin.right": "18mm",
+  "markdown-pdf.margin.left": "18mm",
+  "markdown-pdf.printBackground": true,
+  "markdown-pdf.styles": ["docs/pdf.css"],
+  "markdown-pdf.displayHeaderFooter": true,
+  "markdown-pdf.headerTemplate": "<div style=\"font-size:8px; color:#94a3b8; width:100%; padding:0 18mm; text-align:right;\">Triaje Clínico Preliminar Asistido por IA — AIE Summer Camp 2026</div>",
+  "markdown-pdf.footerTemplate": "<div style=\"font-size:8px; color:#94a3b8; width:100%; padding:0 18mm; text-align:center;\"><span class=\"pageNumber\"></span> / <span class=\"totalPages\"></span></div>",
+  "markdown-pdf.convertOnSave": false
+}
