@@ -225,10 +225,3 @@ de trastornos hipertensivos del embarazo.
 ├── ARCHITECTURE.md         Diagrama y flujo de datos detallado
 └── PROMPTS.md              Trazabilidad de copiloto: decisiones y depuraciones
 ```
-
----
-
-## 8. Advertencia
-
-Prototipo académico. No constituye consejo médico ni sustituye la valoración de un
-profesional de la salud. Los datos utilizados en las pruebas son ficticios.

@@ -62,7 +62,13 @@
             "propuesta_ia": "={{ $json.propuesta_receta_o_plan }}",
             "justificacion_clinica_rag": "={{ $json.justificacion_clinica_rag }}",
             "contraindicaciones_alertas": "={{ $json.contraindicaciones_alertas }}",
-            "fuentes_rag": "={{ JSON.stringify({ \"lista\": $json.fuentes_rag }) }}"
+            "fuentes_rag": "={{ JSON.stringify({ \"lista\": $json.fuentes_rag }) }}",
+            "pa_sistolica": "={{ $('Webhook').item.json.body.pa_sistolica }}",
+            "pa_diastolica": "={{ $('Webhook').item.json.body.pa_diastolica }}",
+            "frecuencia_cardiaca": "={{ $('Webhook').item.json.body.frecuencia_cardiaca }}",
+            "frecuencia_respiratoria": "={{ $('Webhook').item.json.body.frecuencia_respiratoria }}",
+            "temperatura": "={{ $('Webhook').item.json.body.temperatura }}",
+            "saturacion_oxigeno": "={{ $('Webhook').item.json.body.saturacion_oxigeno }}"
           },
           "matchingColumns": [
             "id"
@@ -196,7 +202,7 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": false
+              "removed": true
             },
             {
               "id": "estado",
@@ -206,7 +212,7 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": false
+              "removed": true
             },
             {
               "id": "attended_by",
@@ -216,7 +222,7 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": false
+              "removed": true
             },
             {
               "id": "created_at",
@@ -226,7 +232,7 @@
               "display": true,
               "type": "dateTime",
               "canBeUsedToMatch": true,
-              "removed": false
+              "removed": true
             },
             {
               "id": "attended_at",
@@ -235,6 +241,66 @@
               "defaultMatch": false,
               "display": true,
               "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pa_sistolica",
+              "displayName": "pa_sistolica",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pa_diastolica",
+              "displayName": "pa_diastolica",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "frecuencia_cardiaca",
+              "displayName": "frecuencia_cardiaca",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "frecuencia_respiratoria",
+              "displayName": "frecuencia_respiratoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "temperatura",
+              "displayName": "temperatura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "saturacion_oxigeno",
+              "displayName": "saturacion_oxigeno",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
               "canBeUsedToMatch": true,
               "removed": false
             }
@@ -461,9 +527,10 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "a0acade6-8991-4b55-96fd-a0901f90443a",
+  "versionId": "813631b8-a2fb-49f0-85fb-65a278f8a74d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "9e9cd39ce1bbec9003d19699ad22fe0b21be96299ddfbb8c670ff9ff1dcc8344"

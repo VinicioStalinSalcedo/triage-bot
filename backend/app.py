@@ -121,10 +121,6 @@ def _to_clinical_query(symptoms_text: str, patient: dict) -> str:
         completion = client.chat.completions.create(
             model=MODEL_REWRITE,
             temperature=0.0,
-            # Sin tope de tokens: gpt-oss-120b es un modelo de razonamiento y
-            # consume presupuesto pensando antes de emitir contenido. Con un
-            # max_tokens ajustado (150) devolvía cadena vacía, y la reescritura
-            # fallaba en silencio — ver PROMPTS.md, 2026-08-25.
             messages=[
                 {"role": "system", "content": QUERY_REWRITE_PROMPT},
                 {"role": "user", "content": build_rewrite_prompt(symptoms_text, patient)},
@@ -186,7 +182,7 @@ def triage():
             # reproducibilidad pesa más que la variedad de la redacción. Con 0.2
             # el mismo caso de urgencia hipertensiva se clasificó Verde en una
             # ejecución y Amarillo en otra — varianza inaceptable en la frontera
-            # entre niveles (ver PROMPTS.md, evaluación del 2026-08-25).
+            # entre niveles.
             temperature=0,
             response_format={"type": "json_object"},
             messages=[

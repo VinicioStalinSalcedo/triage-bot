@@ -1,15 +1,72 @@
+<style>
+/* Estilos de impresión embebidos. Van dentro del documento a propósito: la extensión
+   de exportación solo carga docs/pdf.css si el proyecto es la carpeta raíz abierta en
+   el editor, y así el PDF sale correcto en cualquier caso. */
+body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; font-size: 10.5pt;
+       line-height: 1.6; color: #1e293b; }
+.page-break, div[style*="page-break-after"] { page-break-after: always !important;
+       break-after: page !important; height: 0; }
+h1 { font-size: 20pt; color: #0f172a; letter-spacing: -0.02em; margin-bottom: 0.3em; }
+h2 { font-size: 15pt; color: #0f172a; border-bottom: 1.5px solid #cbd5e1;
+     padding-bottom: 0.25em; margin-top: 1.6em; page-break-after: avoid; }
+h3 { font-size: 12pt; color: #0f766e; margin-top: 1.3em; page-break-after: avoid; }
+h4 { font-size: 10.5pt; color: #334155; page-break-after: avoid; }
+table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin: 1em 0;
+        page-break-inside: avoid; }
+th { background: #f1f5f9; color: #0f172a; font-weight: 600; text-align: left;
+     border: 1px solid #cbd5e1; padding: 6px 9px; }
+td { border: 1px solid #e2e8f0; padding: 6px 9px; vertical-align: top; }
+tr:nth-child(even) td { background: #f8fafc; }
+pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px 12px;
+      font-size: 8pt; line-height: 1.35; page-break-inside: avoid; white-space: pre;
+      overflow-x: hidden; }
+code { font-family: "Cascadia Code", Consolas, monospace; font-size: 9pt; background: #f1f5f9;
+       padding: 1px 4px; border-radius: 3px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+blockquote { border-left: 3px solid #0f766e; background: #f0fdfa; margin: 1em 0;
+             padding: 0.6em 1em; color: #334155; }
+div[align="center"] h1 { font-size: 24pt; margin-top: 0; }
+div[align="center"] h3 { font-size: 12pt; font-weight: 400; color: #475569; }
+hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.6em 0; }
+strong { color: #0f172a; }
+</style>
+
+<div align="center">
+<br><br><br>
+
 # Arquitectura de Implementación
 
-Diagrama de integraciones y flujo de datos entre APIs, modelos, bases de datos y servicios
-del sistema de triaje clínico preliminar.
+### Diagrama de integraciones y flujo de datos entre APIs, modelos, bases de datos y servicios
 
----
+<br><br>
+<br><br>
+
+**Proyecto Final** — Sistema de Triaje Clínico Preliminar
+
+<br><br><br><br>
+
+Artificial Intelligence Essentials (AIE) — Summer Camp 2026
+
+<br><br><br><br><br>
+
+Escuela Politécnica Nacional
+Célula de Ciberseguridad CyberMinds
+
+<br><br><br><br>
+
+**Autor:** `Vinicio Stalin Salcedo Peña`
+
+<br><br><br>
+
+</div>
+
+<div class="page-break" style="page-break-after: always;"></div>
 
 ## 1. Vista general
 
 ```mermaid
 flowchart TD
-    P["👤 Paciente<br/>(Streamlit :8501)"] -->|"POST JSON<br/>síntomas + demografía"| W
+    P["👤 Paciente<br/>(Streamlit :8501)"] -->|"POST JSON<br/>síntomas + datos<br/>+ signos vitales"| W
 
     subgraph N8N["n8n · Orquestación (:5678)"]
         W["Webhook<br/>/webhook/triage"] --> H["HTTP Request"]
@@ -47,7 +104,7 @@ flowchart TD
     style E fill:#cf9,color:#000
 ```
 
-> Si el diagrama no se renderiza, la misma secuencia está descrita paso a paso en §3.
+<br>
 
 ---
 
@@ -84,6 +141,8 @@ desarrollo ya tiene un PostgreSQL nativo ocupando el 5432.
 
 ---
 
+<div class="page-break" style="page-break-after: always;"></div>
+
 ## 3. Flujo de datos, paso a paso
 
 ### Etapa 1 — Captura
@@ -115,7 +174,7 @@ El relato coloquial se traduce a terminología de guía:
 **Por qué existe esta etapa.** Buscar con las palabras del paciente contra texto técnico
 recuperaba secciones equivocadas: "hinchazón de cara + cefalea + alteración visual" se
 parece más a la sección de envenenamientos que al lenguaje de la guía obstétrica. El
-incidente completo está documentado en `PROMPTS.md`.
+incidente completo está documentado en el anexo de trazabilidad del copiloto.
 
 La salida se valida antes de usarse: si viene vacía, es demasiado corta o contiene marcas
 de rechazo —lo que ocurre ante intentos de inyección de prompt—, se descarta y se continúa
@@ -257,6 +316,8 @@ validación previa fallara.
 
 ---
 
+<div class="page-break" style="page-break-after: always;"></div>
+
 ## 5. Manejo de fallos
 
 | Fallo | Comportamiento |
@@ -270,7 +331,7 @@ validación previa fallara.
 
 El principio: **degradar con gracia, pero de forma observable**. Un fallback silencioso en
 la etapa de reescritura llegó a ocultar un fallo total de ese componente durante varias
-pruebas — el incidente está documentado en `PROMPTS.md`.
+pruebas — el incidente está documentado en el anexo de trazabilidad del copiloto.
 
 ---
 
