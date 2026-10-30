@@ -358,7 +358,7 @@ Este resultado motivó **descartar la implementación de un filtro de sanitizaci
 
 ### 8.1 Conclusiones
 
-El sistema cumple su objetivo: clasifica correctamente veintitrés de veintiséis casos clínicos redactados en lenguaje coloquial, sin producir un solo sub-triaje, fundamenta sus dictámenes en normativa oficial citando guía y página, y mantiene la decisión clínica bajo control humano.
+El sistema cumple su objetivo: clasifica correctamente veintidós de veintiséis casos clínicos redactados en lenguaje coloquial, sin producir un solo sub-triaje, fundamenta sus dictámenes en normativa oficial citando guía y página, y mantiene la decisión clínica bajo control humano.
 
 Tres resultados merecen destacarse por encima del funcionamiento nominal:
 
