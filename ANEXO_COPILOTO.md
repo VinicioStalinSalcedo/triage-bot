@@ -18,7 +18,7 @@ Célula de Ciberseguridad CyberMinds
 
 <br><br>
 
-**Autor:** `[NOMBRE COMPLETO]`
+**Autor:** Vinicio Salcedo Peña
 
 **Fecha:** 25 de agosto de 2026
 

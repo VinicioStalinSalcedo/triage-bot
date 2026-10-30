@@ -14,7 +14,7 @@ Artificial Intelligence Essentials (AIE) — Summer Camp 2026
 Escuela Politécnica Nacional
 Célula de Ciberseguridad CyberMinds
 
-**Autor:** `[NOMBRE COMPLETO]`
+**Autor:** Vinicio Salcedo Peña
 
 **Fecha:** 25 de agosto de 2026
 
